@@ -1,0 +1,19 @@
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+*.log
+
+/Assets/kenney_ui-pack
+/Assets/SimplePoly City - Low Poly Assets
+/Assets/honda-vario
+
+# Visual Studio / C#
+/.vs/
+/*.csproj
+/*.unityproj
+/*.sln
+/*.suo
