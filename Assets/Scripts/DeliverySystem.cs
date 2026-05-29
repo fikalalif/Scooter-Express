@@ -3,21 +3,19 @@ using UnityEngine;
 public class DeliverySystem : MonoBehaviour
 {
     [Header("Referensi Visual")]
-    public GameObject paketDiMotor; // Taruh objek PaketVisual ke sini nanti
+    public GameObject paketDiMotor;
 
     [Header("Status Kurir")]
-    public bool sedangBawaPaket = false; // Status awal kurir kosong
+    public bool sedangBawaPaket = false;
 
     void Start()
     {
-        // Memastikan di awal game paket di motor tersembunyi
         if (paketDiMotor != null)
         {
             paketDiMotor.SetActive(false);
         }
     }
 
-    // Fungsi bawaan Unity untuk mendeteksi sensor Trigger Collider
     void OnTriggerEnter(Collider other)
     {
         // 1. LOGIKA AMBIL PAKET DI RESTORAN
@@ -27,25 +25,30 @@ public class DeliverySystem : MonoBehaviour
 
             if (paketDiMotor != null)
             {
-                paketDiMotor.SetActive(true); // Paket muncul di belakang motor
+                paketDiMotor.SetActive(true);
             }
 
-            Debug.Log("Paket berhasil diambil dari Restoran! Antar ke Rumah Tujuan.");
-            // Nanti di sini kita bisa tambahin efek suara "ting!"
+            Debug.Log("Paket diambil!");
         }
 
-        // 2. LOGIKA ANTAR PAKET DI RUMAH
+        // 2. LOGIKA ANTAR PAKET DI RUMAH (ADA TAMBAHAN DI SINI)
         if (other.CompareTag("Rumah") && sedangBawaPaket)
         {
             sedangBawaPaket = false;
 
             if (paketDiMotor != null)
             {
-                paketDiMotor.SetActive(false); // Paket hilang karena sudah diserahkan
+                paketDiMotor.SetActive(false);
             }
 
-            Debug.Log("Paket sukses diantarkan! Anda mendapatkan tip uang.");
-            // Nanti di sini tempat kita nambahin skor atau uang UAS lu
+            // --- HUBUNGKAN KE GAME MANAGER ---
+            // Tambah ongkir Rp 15.000 tiap sukses nganter
+            GameManager.instance.TambahUang(15000);
+
+            // Kasih bonus waktu 20 detik biar pemain bisa lanjut cari orderan
+            GameManager.instance.waktuBermain += 20f;
+
+            Debug.Log("Paket sukses! Duit cair dan waktu nambah.");
         }
     }
 }

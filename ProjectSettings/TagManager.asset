@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Restaurant
   - Rumah
+  - Oli
   layers:
   - Default
   - TransparentFX
