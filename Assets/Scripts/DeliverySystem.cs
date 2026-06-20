@@ -5,15 +5,26 @@ public class DeliverySystem : MonoBehaviour
     [Header("Referensi Visual")]
     public GameObject paketDiMotor;
 
+    [Header("Sistem Titik Lokasi Acak (Terpisah)")]
+    public GameObject zonaRestoran;
+    public GameObject zonaRumah;
+
+    // Kita pisah kolomnya di Inspector biar gak ketuker tema bangunannya
+    public Transform[] daftarTitikRestoran;
+    public Transform[] daftarTitikRumah;
+
     [Header("Status Kurir")]
     public bool sedangBawaPaket = false;
 
     void Start()
     {
-        if (paketDiMotor != null)
-        {
-            paketDiMotor.SetActive(false);
-        }
+        if (paketDiMotor != null) paketDiMotor.SetActive(false);
+
+        // Awal game: Restoran HANYA boleh pindah ke titik khusus restoran
+        PindahKeLokasiAcak(zonaRestoran, daftarTitikRestoran);
+        zonaRestoran.SetActive(true);
+
+        zonaRumah.SetActive(false);
     }
 
     void OnTriggerEnter(Collider other)
@@ -22,33 +33,43 @@ public class DeliverySystem : MonoBehaviour
         if (other.CompareTag("Restaurant") && !sedangBawaPaket)
         {
             sedangBawaPaket = true;
+            if (paketDiMotor != null) paketDiMotor.SetActive(true);
 
-            if (paketDiMotor != null)
-            {
-                paketDiMotor.SetActive(true);
-            }
+            zonaRestoran.SetActive(false);
 
-            Debug.Log("Paket diambil!");
+            // Rumah HANYA boleh pindah ke titik khusus perumahan warga
+            PindahKeLokasiAcak(zonaRumah, daftarTitikRumah);
+            zonaRumah.SetActive(true);
+
+            Debug.Log("Paket diambil dari Restoran! Antar ke Rumah Pelanggan!");
         }
 
-        // 2. LOGIKA ANTAR PAKET DI RUMAH (ADA TAMBAHAN DI SINI)
+        // 2. LOGIKA ANTAR PAKET DI RUMAH
         if (other.CompareTag("Rumah") && sedangBawaPaket)
         {
             sedangBawaPaket = false;
+            if (paketDiMotor != null) paketDiMotor.SetActive(false);
 
-            if (paketDiMotor != null)
-            {
-                paketDiMotor.SetActive(false);
-            }
-
-            // --- HUBUNGKAN KE GAME MANAGER ---
-            // Tambah ongkir Rp 15.000 tiap sukses nganter
             GameManager.instance.TambahUang(15000);
+            GameManager.instance.waktuBermain += 60f;
 
-            // Kasih bonus waktu 20 detik biar pemain bisa lanjut cari orderan
-            GameManager.instance.waktuBermain += 20f;
+            zonaRumah.SetActive(false);
 
-            Debug.Log("Paket sukses! Duit cair dan waktu nambah.");
+            // Munculin restoran baru, tetep di area khusus restoran lagi
+            PindahKeLokasiAcak(zonaRestoran, daftarTitikRestoran);
+            zonaRestoran.SetActive(true);
+
+            Debug.Log("Paket sukses diantar ke Rumah! Cari orderan restoran baru!");
+        }
+    }
+
+    // Fungsi kita upgrade agar menerima parameter kumpulan array yang spesifik
+    void PindahKeLokasiAcak(GameObject targetObjek, Transform[] kumpulanTitik)
+    {
+        if (kumpulanTitik.Length > 0)
+        {
+            int indeksAcak = Random.Range(0, kumpulanTitik.Length);
+            targetObjek.transform.position = kumpulanTitik[indeksAcak].position;
         }
     }
 }

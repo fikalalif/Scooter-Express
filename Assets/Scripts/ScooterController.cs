@@ -1,9 +1,11 @@
 using UnityEngine;
-using System.Collections;
 
 [RequireComponent(typeof(Rigidbody))]
 public class ScooterController : MonoBehaviour
 {
+    [Header("Kontrol Layar HP")]
+    public FixedJoystick analogLayar; // Wadah buat masukin analognya
+
     [Header("Pengaturan Fisika Utama")]
     public float moveSpeed = 15f;
     public float turnSpeed = 90f;
@@ -17,10 +19,6 @@ public class ScooterController : MonoBehaviour
     private float moveInput;
     private float turnInput;
 
-    // Variabel state untuk Oli
-    private bool sedangTerpeleset = false;
-    private float rotasiTerpeleset = 0f;
-
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -28,17 +26,18 @@ public class ScooterController : MonoBehaviour
 
     void Update()
     {
-        // Kalau lagi terpeleset, input keyboard belok diabaikan
-        if (!sedangTerpeleset)
+        // Mengecek apakah analog sudah dipasang di Unity
+        if (analogLayar != null)
         {
-            moveInput = Input.GetAxis("Vertical");
-            turnInput = Input.GetAxis("Horizontal");
+            // Membaca pergerakan jempol dari layar HP
+            moveInput = analogLayar.Vertical;
+            turnInput = analogLayar.Horizontal;
         }
         else
         {
-            // Tetap bisa gas maju dikit tapi gak bisa dikendalikan arahnya
+            // Fallback: Tetap bisa pakai WASD kalau dimainin di PC
             moveInput = Input.GetAxis("Vertical");
-            turnInput = 0f;
+            turnInput = Input.GetAxis("Horizontal");
         }
 
         UpdateVisuals();
@@ -46,16 +45,11 @@ public class ScooterController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Fisika motor majunya tetep sama persis
         Vector3 arahMaju = transform.forward * moveInput * moveSpeed;
         rb.linearVelocity = new Vector3(arahMaju.x, rb.linearVelocity.y, arahMaju.z);
 
-        if (sedangTerpeleset)
-        {
-            // Maksa motor berputar melintir sendiri di sumbu Y
-            Quaternion putaranLiar = Quaternion.Euler(0f, rotasiTerpeleset * Time.fixedDeltaTime, 0f);
-            rb.MoveRotation(rb.rotation * putaranLiar);
-        }
-        else if (Mathf.Abs(moveInput) > 0.1f)
+        if (Mathf.Abs(moveInput) > 0.1f)
         {
             float sudutBelok = turnInput * turnSpeed * Time.fixedDeltaTime;
             Quaternion belok = Quaternion.Euler(0f, sudutBelok, 0f);
@@ -72,27 +66,5 @@ public class ScooterController : MonoBehaviour
             banDepan.Rotate(Vector3.right * kecepatanPutar * Time.deltaTime, Space.Self);
             banBelakang.Rotate(Vector3.right * kecepatanPutar * Time.deltaTime, Space.Self);
         }
-    }
-
-    // Deteksi Trigger Nabrak Oli
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Oli") && !sedangTerpeleset)
-        {
-            StartCoroutine(ProsesTerpeleset());
-        }
-    }
-
-    IEnumerator ProsesTerpeleset()
-    {
-        sedangTerpeleset = true;
-        // Pilih arah muter acak, ke kanan atau ke kiri biar realistis
-        rotasiTerpeleset = Random.Range(150f, 300f) * (Random.value > 0.5f ? 1f : -1f);
-
-        Debug.Log("Waduh, Vario lu kepleset oli kotor!");
-
-        yield return new WaitForSeconds(1.5f); // Durasi efek licin (1.5 detik)
-
-        sedangTerpeleset = false;
     }
 }
