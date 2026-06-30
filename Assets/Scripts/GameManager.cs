@@ -6,23 +6,42 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
-    [Header("Referensi UI")]
+    [Header("Referensi UI HUD")]
     public TextMeshProUGUI teksTimer;
     public TextMeshProUGUI teksUang;
     public GameObject panelGameOver;
-    public GameObject panelMenang; // TAMBAHAN: Kolom untuk panel baru
+    public GameObject panelMenang;
+
+    [Header("Referensi UI Baru (Tugas Dosen)")]
+    public GameObject panelInstruksi;
+    public GameObject panelPause;
+    public GameObject panelSetting;
+    public GameObject tombolPauseKecil; // TAMBAHAN: Kita daftarin tombol pausenya
 
     [Header("Pengaturan Game")]
     public float waktuBermain = 60f;
+    public int targetUang = 60000;
     private int totalUang = 0;
-    private bool gameAktif = true;
+    private bool gameAktif = false;
+    public TextMeshProUGUI teksTombolSuara; // Tambahkan ini di deretan [Header("Referensi UI Baru")]
 
     void Awake() { instance = this; }
 
     void Start()
     {
         if (panelGameOver != null) panelGameOver.SetActive(false);
-        if (panelMenang != null) panelMenang.SetActive(false); // Pastikan panel menang mati di awal
+        if (panelMenang != null) panelMenang.SetActive(false);
+        if (panelPause != null) panelPause.SetActive(false);
+        if (panelSetting != null) panelSetting.SetActive(false);
+
+        // MATIKAN tombol pause di awal biar gak numpuk sama instruksi
+        if (tombolPauseKecil != null) tombolPauseKecil.SetActive(false);
+
+        if (panelInstruksi != null)
+        {
+            panelInstruksi.SetActive(true);
+            Time.timeScale = 0f;
+        }
     }
 
     void Update()
@@ -40,6 +59,72 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // --- FUNGSI INSTRUKSI ---
+    public void TutupInstruksiDanMulai()
+    {
+        if (panelInstruksi != null) panelInstruksi.SetActive(false);
+
+        // NYALAKAN tombol pause saat game baru beneran mulai
+        if (tombolPauseKecil != null) tombolPauseKecil.SetActive(true);
+
+        Time.timeScale = 1f;
+        gameAktif = true;
+    }
+
+    // --- FUNGSI PAUSE MENU ---
+    public void BukaPauseMenu()
+    {
+        if (panelPause != null) panelPause.SetActive(true);
+
+        // Sembunyikan tombol pause kecil biar layarnya bersih pas menu pause terbuka
+        if (tombolPauseKecil != null) tombolPauseKecil.SetActive(false);
+
+        Time.timeScale = 0f;
+    }
+
+    public void LanjutGame() // Resume
+    {
+        if (panelPause != null) panelPause.SetActive(false);
+
+        // Munculkan lagi tombol pause kecilnya
+        if (tombolPauseKecil != null) tombolPauseKecil.SetActive(true);
+
+        Time.timeScale = 1f;
+    }
+
+    public void KeluarKeMainMenu() // Exit
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    // --- FUNGSI SETTING ---
+    public void BukaSetting()
+    {
+        if (panelSetting != null) panelSetting.SetActive(true);
+    }
+
+    public void TutupSetting()
+    {
+        if (panelSetting != null) panelSetting.SetActive(false);
+    }
+
+    public void ToggleSuara()
+    {
+        bool suaraMenyala = PlayerPrefs.GetInt("SuaraMute", 0) == 0;
+        suaraMenyala = !suaraMenyala;
+        PlayerPrefs.SetInt("SuaraMute", suaraMenyala ? 0 : 1);
+
+        AudioListener.volume = suaraMenyala ? 1f : 0f;
+
+        // Ini baris yang bikin tulisannya update
+        if (teksTombolSuara != null)
+        {
+            teksTombolSuara.text = suaraMenyala ? "SUARA: ON" : "SUARA: OFF";
+        }
+    }
+
+    // --- FUNGSI BAWAAN LAMA ---
     void TriggerGameOver()
     {
         gameAktif = false;
@@ -47,18 +132,17 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    // FUNGSI DI-UPGRADE
     public void TambahUang(int jumlah)
     {
         totalUang += jumlah;
         teksUang.text = "Uang: Rp " + totalUang.ToString();
 
-        // Cek jika uang sudah mencapai 60.000
-        if (totalUang >= 60000 && panelMenang != null && gameAktif)
+        // UBAH 60000 MENJADI targetUang
+        if (totalUang >= targetUang && panelMenang != null && gameAktif)
         {
             gameAktif = false;
             panelMenang.SetActive(true);
-            Time.timeScale = 0f; // Berhentikan waktu
+            Time.timeScale = 0f;
         }
     }
 
@@ -68,10 +152,9 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    // FUNGSI BARU UNTUK TOMBOL LEVEL 2
     public void FungsiLanjutLevel()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Level_2"); // Pastikan lu bikin Scene bernama Level_2 nanti
+        SceneManager.LoadScene("Level_2");
     }
 }

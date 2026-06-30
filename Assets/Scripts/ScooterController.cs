@@ -19,6 +19,8 @@ public class ScooterController : MonoBehaviour
     private float moveInput;
     private float turnInput;
 
+    public bool sedangSlip = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -43,18 +45,45 @@ public class ScooterController : MonoBehaviour
         UpdateVisuals();
     }
 
+    // Timpa FixedUpdate lu yang lama dengan ini
     void FixedUpdate()
     {
-        // Fisika motor majunya tetep sama persis
-        Vector3 arahMaju = transform.forward * moveInput * moveSpeed;
-        rb.linearVelocity = new Vector3(arahMaju.x, rb.linearVelocity.y, arahMaju.z);
-
-        if (Mathf.Abs(moveInput) > 0.1f)
+        if (sedangSlip)
         {
-            float sudutBelok = turnInput * turnSpeed * Time.fixedDeltaTime;
-            Quaternion belok = Quaternion.Euler(0f, sudutBelok, 0f);
-            rb.MoveRotation(rb.rotation * belok);
+            // 1. Bikin setir ngebanting ke kiri atau kanan secara acak dan brutal
+            float setirNgaco = Random.Range(-300f, 300f);
+            Quaternion belokAcak = Quaternion.Euler(0f, setirNgaco * Time.fixedDeltaTime, 0f);
+            rb.MoveRotation(rb.rotation * belokAcak);
+
+            // 2. Motor tetep meluncur, tapi kecepatannya ngedrop jadi 40% (0.4f)
+            // Arahnya bakal ngacak banget karena ngikutin bodinya yang lagi muter liar
+            Vector3 arahMeluncur = transform.forward * (moveSpeed * 0.4f);
+            rb.linearVelocity = new Vector3(arahMeluncur.x, rb.linearVelocity.y, arahMeluncur.z);
         }
+        else
+        {
+            // Kontrol normal analog
+            Vector3 arahMaju = transform.forward * moveInput * moveSpeed;
+            rb.linearVelocity = new Vector3(arahMaju.x, rb.linearVelocity.y, arahMaju.z);
+
+            if (Mathf.Abs(moveInput) > 0.1f)
+            {
+                float sudutBelok = turnInput * turnSpeed * Time.fixedDeltaTime;
+                Quaternion belok = Quaternion.Euler(0f, sudutBelok, 0f);
+                rb.MoveRotation(rb.rotation * belok);
+            }
+        }
+    }
+
+    public void TerkenaOli(float durasi)
+    {
+        sedangSlip = true;
+        Invoke("SelesaiSlip", durasi); // Panggil fungsi SelesaiSlip setelah durasi habis
+    }
+
+    void SelesaiSlip()
+    {
+        sedangSlip = false;
     }
 
     void UpdateVisuals()
