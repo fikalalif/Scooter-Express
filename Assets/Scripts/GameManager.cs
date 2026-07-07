@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public GameObject panelPause;
     public GameObject panelSetting;
     public GameObject tombolPauseKecil; // TAMBAHAN: Kita daftarin tombol pausenya
+    public GameObject uiMinimap;
 
     [Header("Pengaturan Game")]
     public float waktuBermain = 60f;
@@ -33,9 +34,10 @@ public class GameManager : MonoBehaviour
         if (panelMenang != null) panelMenang.SetActive(false);
         if (panelPause != null) panelPause.SetActive(false);
         if (panelSetting != null) panelSetting.SetActive(false);
-
-        // MATIKAN tombol pause di awal biar gak numpuk sama instruksi
         if (tombolPauseKecil != null) tombolPauseKecil.SetActive(false);
+
+        // MATIKAN Minimap saat instruksi muncul
+        if (uiMinimap != null) uiMinimap.SetActive(false);
 
         if (panelInstruksi != null)
         {
@@ -63,9 +65,10 @@ public class GameManager : MonoBehaviour
     public void TutupInstruksiDanMulai()
     {
         if (panelInstruksi != null) panelInstruksi.SetActive(false);
-
-        // NYALAKAN tombol pause saat game baru beneran mulai
         if (tombolPauseKecil != null) tombolPauseKecil.SetActive(true);
+
+        // NYALAKAN Minimap saat game mulai
+        if (uiMinimap != null) uiMinimap.SetActive(true);
 
         Time.timeScale = 1f;
         gameAktif = true;

@@ -50,22 +50,28 @@ public class ScooterController : MonoBehaviour
     {
         if (sedangSlip)
         {
-            // 1. Bikin setir ngebanting ke kiri atau kanan secara acak dan brutal
+            // Efek slip: Rotasi acak dan kecepatan turun
             float setirNgaco = Random.Range(-300f, 300f);
             Quaternion belokAcak = Quaternion.Euler(0f, setirNgaco * Time.fixedDeltaTime, 0f);
             rb.MoveRotation(rb.rotation * belokAcak);
 
-            // 2. Motor tetep meluncur, tapi kecepatannya ngedrop jadi 40% (0.4f)
-            // Arahnya bakal ngacak banget karena ngikutin bodinya yang lagi muter liar
+            // Dorong motor ke depan, tapi BIARKAN nilai Y (gravitasi) tetap dari Rigidbody
             Vector3 arahMeluncur = transform.forward * (moveSpeed * 0.4f);
             rb.linearVelocity = new Vector3(arahMeluncur.x, rb.linearVelocity.y, arahMeluncur.z);
         }
         else
         {
             // Kontrol normal analog
-            Vector3 arahMaju = transform.forward * moveInput * moveSpeed;
-            rb.linearVelocity = new Vector3(arahMaju.x, rb.linearVelocity.y, arahMaju.z);
+            // Pastikan arah majunya rata dengan tanah (Y = 0)
+            Vector3 arahMaju = transform.forward;
+            arahMaju.y = 0f;
+            arahMaju.Normalize();
 
+            // Dorong motor sesuai input, dan TETAP PAKAI rb.velocity.y untuk gravitasi
+            Vector3 kecepatanBaru = arahMaju * moveInput * moveSpeed;
+            rb.linearVelocity = new Vector3(kecepatanBaru.x, rb.linearVelocity.y, kecepatanBaru.z);
+
+            // Belok
             if (Mathf.Abs(moveInput) > 0.1f)
             {
                 float sudutBelok = turnInput * turnSpeed * Time.fixedDeltaTime;
